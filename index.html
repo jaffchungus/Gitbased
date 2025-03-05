@@ -240,7 +240,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="root">Loading...</div>
+    <div id="root"></div>
 
     <!-- CDN Scripts -->
     <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
@@ -249,421 +249,410 @@
     <script>
         console.log('Script started');
 
-        window.onload = () => {
-            console.log('Window loaded');
+        // Mock Data
+        const generateMockPRs = (count) => {
+            console.log('Generating', count, 'mock PRs');
+            return Array.from({ length: count }, (_, i) => ({
+                id: i + 1,
+                title: `PR #${i + 1}: ${['Feature', 'Fix', 'Refactor', 'Docs'][i % 4]}`,
+                author: `user${(i % 10) + 1}`,
+                status: ['open', 'review', 'merged', 'draft'][i % 4],
+                createdAt: new Date(2025, 2, Math.floor(Math.random() * 28) + 1).toISOString(),
+                description: `This PR addresses issue #${i}. Includes various changes.`,
+                diff: [
+                    { line: 1, type: 'context', content: ' function main() {' },
+                    { line: 2, type: 'removed', content: '-    console.log("Old");' },
+                    { line: 3, type: 'added', content: '+    console.log("New");' },
+                    { line: 4, type: 'context', content: ' }' }
+                ],
+                comments: [],
+                inlineComments: {},
+                reviewers: [`user${(i % 5) + 1}`, `user${(i % 5) + 2}`],
+                labels: ['enhancement', 'bug', 'docs'][i % 3],
+                milestone: `v${Math.floor(i / 10) + 1}.0`,
+                repo: `repo${(i % 3) + 1}`
+            }));
+        };
 
-            if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') {
-                document.getElementById('root').innerHTML = 
-                    '<div class="error-message">React or ReactDOM not loaded</div>';
-                console.error('React or ReactDOM missing');
-                return;
-            }
+        const mockUsers = Array.from({ length: 25 }, (_, i) => ({
+            id: `user${i + 1}`,
+            name: `User ${i + 1}`,
+            email: `user${i + 1}@ance.com`,
+            role: ['developer', 'reviewer', 'admin'][i % 3],
+            password: `pass${i + 1}` // Mock password
+        }));
 
-            console.log('React and ReactDOM detected');
+        const mockRepos = ['repo1', 'repo2', 'repo3'];
 
-            // Mock Data
-            const generateMockPRs = (count) => {
-                console.log('Generating', count, 'mock PRs');
-                return Array.from({ length: count }, (_, i) => ({
-                    id: i + 1,
-                    title: `PR #${i + 1}: ${['Feature', 'Fix', 'Refactor', 'Docs'][i % 4]}`,
-                    author: `user${(i % 10) + 1}`,
-                    status: ['open', 'review', 'merged', 'draft'][i % 4],
-                    createdAt: new Date(2025, 2, Math.floor(Math.random() * 28) + 1).toISOString(),
-                    description: `This PR addresses issue #${i}. Includes various changes.`,
-                    diff: [
-                        { line: 1, type: 'context', content: ' function main() {' },
-                        { line: 2, type: 'removed', content: '-    console.log("Old");' },
-                        { line: 3, type: 'added', content: '+    console.log("New");' },
-                        { line: 4, type: 'context', content: ' }' }
-                    ],
-                    comments: [],
-                    inlineComments: {},
-                    reviewers: [`user${(i % 5) + 1}`, `user${(i % 5) + 2}`],
-                    labels: ['enhancement', 'bug', 'docs'][i % 3],
-                    milestone: `v${Math.floor(i / 10) + 1}.0`,
-                    repo: `repo${(i % 3) + 1}`
+        // Utility Functions
+        const debounce = (fn, delay) => {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => fn(...args), delay);
+            };
+        };
+
+        // Virtual List Hook
+        const useVirtualList = (items, itemHeight = 50) => {
+            const [range, setRange] = React.useState({ start: 0, end: 20 });
+            const listRef = React.useRef(null);
+
+            const updateRange = () => {
+                if (!listRef.current) return;
+                const { scrollTop, clientHeight } = listRef.current;
+                const start = Math.max(0, Math.floor(scrollTop / itemHeight));
+                const end = Math.min(start + Math.ceil(clientHeight / itemHeight) + 5, items.length);
+                setRange({ start, end });
+            };
+
+            React.useEffect(() => {
+                const list = listRef.current;
+                if (list) {
+                    list.addEventListener('scroll', debounce(updateRange, 100));
+                    return () => list.removeEventListener('scroll', updateRange);
+                }
+            }, [items.length]);
+
+            return { listRef, visibleItems: items.slice(range.start, range.end), range };
+        };
+
+        // Login Component
+        const LoginModal = ({ onLogin }) => {
+            const [email, setEmail] = React.useState('');
+            const [password, setPassword] = React.useState('');
+            const [error, setError] = React.useState('');
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                const user = mockUsers.find(u => u.email === email && u.password === password);
+                if (user) {
+                    onLogin(user);
+                    setError('');
+                } else {
+                    setError('Invalid credentials');
+                }
+            };
+
+            return (
+                <div className="login-modal">
+                    <div className="login-box">
+                        <h2>Login to ANCE</h2>
+                        <form onSubmit={handleLogin}>
+                            <input
+                                type="email"
+                                placeholder="Email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                            <input
+                                type="password"
+                                placeholder="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                            {error && <p className="error-message">{error}</p>}
+                            <button type="submit">Login</button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        // Header Component
+        const Header = ({ user, onLogout }) => (
+            <div className="header">
+                <h1>Albert Newton Code Editor</h1>
+                {user && (
+                    <div>
+                        <span>Welcome, {user.name} ({user.role})</span>
+                        <button onClick={onLogout} style={{ marginLeft: '10px' }}>Logout</button>
+                    </div>
+                )}
+            </div>
+        );
+
+        // Filter Component
+        const FilterBar = ({ onFilterChange, repos }) => {
+            const [status, setStatus] = React.useState('');
+            const [author, setAuthor] = React.useState('');
+            const [repo, setRepo] = React.useState('');
+            const [search, setSearch] = React.useState('');
+
+            const handleFilter = () => onFilterChange({ status, author, repo, search });
+
+            return (
+                <div className="filter-bar">
+                    <select value={status} onChange={(e) => { setStatus(e.target.value); handleFilter(); }}>
+                        <option value="">All Statuses</option>
+                        <option value="open">Open</option>
+                        <option value="review">Review</option>
+                        <option value="merged">Merged</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                    <select value={author} onChange={(e) => { setAuthor(e.target.value); handleFilter(); }}>
+                        <option value="">All Authors</option>
+                        {mockUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                    </select>
+                    <select value={repo} onChange={(e) => { setRepo(e.target.value); handleFilter(); }}>
+                        <option value="">All Repos</option>
+                        {repos.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                    <input
+                        type="text"
+                        placeholder="Search PRs..."
+                        value={search}
+                        onChange={(e) => { setSearch(e.target.value); handleFilter(); }}
+                    />
+                </div>
+            );
+        };
+
+        // PR Item Component
+        const PRItem = React.memo(({ pr, onSelect, isSelected }) => (
+            <div
+                className={`pr-item ${isSelected ? 'selected' : ''}`}
+                onClick={() => onSelect(pr)}
+                style={isSelected ? { background: 'linear-gradient(90deg, #3b4a6b, #4a5b8c)' } : {}}
+            >
+                <span>{pr.title} ({pr.repo})</span>
+                <span className={`status-badge status-${pr.status}`}>{pr.status}</span>
+            </div>
+        ));
+
+        // PR List Component
+        const PRList = ({ prs, selectedPR, onSelect }) => {
+            const { listRef, visibleItems } = useVirtualList(prs);
+
+            return (
+                <div ref={listRef} className="pr-list">
+                    {visibleItems.map(pr => (
+                        <PRItem
+                            key={pr.id}
+                            pr={pr}
+                            onSelect={onSelect}
+                            isSelected={selectedPR && selectedPR.id === pr.id}
+                        />
+                    ))}
+                </div>
+            );
+        };
+
+        // Diff Line Component
+        const DiffLine = React.memo(({ line, onAddInlineComment }) => (
+            <div
+                className={`diff-line ${line.type === 'added' ? 'diff-added' : line.type === 'removed' ? 'diff-removed' : ''}`}
+                onClick={() => onAddInlineComment && onAddInlineComment(line.line)}
+            >
+                {line.content}
+            </div>
+        ));
+
+        // Diff View Component
+        const DiffView = ({ diff, inlineComments, onAddInlineComment }) => (
+            <div className="diff-view">
+                {diff.map((line, i) => (
+                    <div key={i}>
+                        <DiffLine line={line} onAddInlineComment={onAddInlineComment} />
+                        {inlineComments[line.line] && inlineComments[line.line].map((c, idx) => (
+                            <div key={idx} className="inline-comment">{c}</div>
+                        ))}
+                    </div>
+                ))}
+            </div>
+        );
+
+        // Comment Component
+        const Comment = React.memo(({ comment, isInline }) => (
+            <div className={`comment ${isInline ? 'inline-comment' : ''}`}>
+                {comment}
+            </div>
+        ));
+
+        // PR Details Component
+        const PRDetails = ({ pr, onAddComment, onAddInlineComment, onChangeStatus, user }) => {
+            const [comment, setComment] = React.useState('');
+            const [inlineComment, setInlineComment] = React.useState('');
+            const [inlineLine, setInlineLine] = React.useState(null);
+
+            const handleCommentSubmit = (e) => {
+                e.preventDefault();
+                if (comment.trim()) {
+                    onAddComment(pr.id, `${user.name}: ${comment}`);
+                    setComment('');
+                }
+            };
+
+            const handleInlineCommentSubmit = (e) => {
+                e.preventDefault();
+                if (inlineComment.trim() && inlineLine !== null) {
+                    onAddInlineComment(pr.id, inlineLine, `${user.name}: ${inlineComment}`);
+                    setInlineComment('');
+                    setInlineLine(null);
+                }
+            };
+
+            const handleAddInlineComment = (line) => setInlineLine(line);
+
+            if (!pr) return <div className="pr-details">Select a PR to view details</div>;
+
+            return (
+                <div className="pr-details">
+                    <h2>{pr.title}</h2>
+                    <p>Repo: {pr.repo} | Author: {pr.author} | Created: {new Date(pr.createdAt).toLocaleDateString()}</p>
+                    <p>Status: {pr.status} | Milestone: {pr.milestone} | Labels: {pr.labels}</p>
+                    <p>Reviewers: {pr.reviewers.join(', ')}</p>
+                    <p>{pr.description}</p>
+                    <div>
+                        <button onClick={() => onChangeStatus(pr.id, 'open')}>Open</button>
+                        <button onClick={() => onChangeStatus(pr.id, 'review')}>Review</button>
+                        <button onClick={() => onChangeStatus(pr.id, 'merged')}>Merge</button>
+                        <button onClick={() => onChangeStatus(pr.id, 'draft')}>Draft</button>
+                    </div>
+                    <h3>Changes</h3>
+                    <DiffView
+                        diff={pr.diff}
+                        inlineComments={pr.inlineComments}
+                        onAddInlineComment={handleAddInlineComment}
+                    />
+                    {inlineLine !== null && (
+                        <form onSubmit={handleInlineCommentSubmit}>
+                            <textarea
+                                value={inlineComment}
+                                onChange={(e) => setInlineComment(e.target.value)}
+                                placeholder={`Comment on line ${inlineLine}...`}
+                            />
+                            <button type="submit">Add Inline Comment</button>
+                            <button type="button" onClick={() => setInlineLine(null)}>Cancel</button>
+                        </form>
+                    )}
+                    <h3>Conversation</h3>
+                    {pr.comments.map((c, i) => <Comment key={i} comment={c} />)}
+                    <form onSubmit={handleCommentSubmit}>
+                        <textarea
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            placeholder="Leave a comment..."
+                        />
+                        <button type="submit">Comment</button>
+                    </form>
+                </div>
+            );
+        };
+
+        // User List Component
+        const UserList = ({ users }) => (
+            <div className="user-list">
+                <h3>Team</h3>
+                {users.map(user => (
+                    <div key={user.id} className="user-item">
+                        {user.name} ({user.role})
+                    </div>
+                ))}
+            </div>
+        );
+
+        // Dashboard Component
+        const Dashboard = ({ user, prs }) => {
+            const userPRs = prs.filter(pr => pr.author === user.id || pr.reviewers.includes(user.id));
+            return (
+                <div className="dashboard">
+                    <h2>Dashboard</h2>
+                    <p>Welcome, {user.name}!</p>
+                    <p>Your PRs: {userPRs.length}</p>
+                    <p>Open PRs: {userPRs.filter(pr => pr.status === 'open').length}</p>
+                    <p>In Review: {userPRs.filter(pr => pr.status === 'review').length}</p>
+                    <p>Merged: {userPRs.filter(pr => pr.status === 'merged').length}</p>
+                </div>
+            );
+        };
+
+        // Main App Component
+        const App = () => {
+            const [user, setUser] = React.useState(null);
+            const [prs, setPRs] = React.useState(generateMockPRs(600));
+            const [selectedPR, setSelectedPR] = React.useState(null);
+            const [filters, setFilters] = React.useState({ status: '', author: '', repo: '', search: '' });
+
+            const filteredPRs = React.useMemo(() => {
+                return prs.filter(pr => {
+                    const matchesStatus = !filters.status || pr.status === filters.status;
+                    const matchesAuthor = !filters.author || pr.author === filters.author;
+                    const matchesRepo = !filters.repo || pr.repo === filters.repo;
+                    const matchesSearch = !filters.search || 
+                        pr.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+                        pr.description.toLowerCase().includes(filters.search.toLowerCase());
+                    return matchesStatus && matchesAuthor && matchesRepo && matchesSearch;
+                });
+            }, [prs, filters]);
+
+            const handleLogin = (loggedInUser) => setUser(loggedInUser);
+            const handleLogout = () => setUser(null);
+
+            const addComment = (prId, comment) => {
+                setPRs(prev => prev.map(pr => 
+                    pr.id === prId ? { ...pr, comments: [...pr.comments, comment] } : pr
+                ));
+            };
+
+            const addInlineComment = (prId, line, comment) => {
+                setPRs(prev => prev.map(pr => {
+                    if (pr.id !== prId) return pr;
+                    const newInlineComments = { ...pr.inlineComments };
+                    newInlineComments[line] = [...(newInlineComments[line] || []), comment];
+                    return { ...pr, inlineComments: newInlineComments };
                 }));
             };
 
-            const mockUsers = Array.from({ length: 25 }, (_, i) => ({
-                id: `user${i + 1}`,
-                name: `User ${i + 1}`,
-                email: `user${i + 1}@ance.com`,
-                role: ['developer', 'reviewer', 'admin'][i % 3],
-                password: `pass${i + 1}` // Mock password
-            }));
-
-            const mockRepos = ['repo1', 'repo2', 'repo3'];
-
-            // Utility Functions
-            const debounce = (fn, delay) => {
-                let timeout;
-                return (...args) => {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => fn(...args), delay);
-                };
+            const changeStatus = (prId, status) => {
+                setPRs(prev => prev.map(pr => 
+                    pr.id === prId ? { ...pr, status } : pr
+                ));
             };
 
-            // Virtual List Hook
-            const useVirtualList = (items, itemHeight = 50) => {
-                const [range, setRange] = React.useState({ start: 0, end: 20 });
-                const listRef = React.useRef(null);
+            const handleFilterChange = (newFilters) => setFilters(newFilters);
 
-                const updateRange = () => {
-                    if (!listRef.current) return;
-                    const { scrollTop, clientHeight } = listRef.current;
-                    const start = Math.max(0, Math.floor(scrollTop / itemHeight));
-                    const end = Math.min(start + Math.ceil(clientHeight / itemHeight) + 5, items.length);
-                    setRange({ start, end });
-                };
-
-                React.useEffect(() => {
-                    const list = listRef.current;
-                    if (list) {
-                        list.addEventListener('scroll', debounce(updateRange, 100));
-                        return () => list.removeEventListener('scroll', updateRange);
-                    }
-                }, [items.length]);
-
-                return { listRef, visibleItems: items.slice(range.start, range.end), range };
-            };
-
-            // Login Component
-            const LoginModal = ({ onLogin }) => {
-                const [email, setEmail] = React.useState('');
-                const [password, setPassword] = React.useState('');
-                const [error, setError] = React.useState('');
-
-                const handleLogin = (e) => {
-                    e.preventDefault();
-                    const user = mockUsers.find(u => u.email === email && u.password === password);
-                    if (user) {
-                        onLogin(user);
-                        setError('');
-                    } else {
-                        setError('Invalid credentials');
-                    }
-                };
-
-                return (
-                    <div className="login-modal">
-                        <div className="login-box">
-                            <h2>Login to ANCE</h2>
-                            <form onSubmit={handleLogin}>
-                                <input
-                                    type="email"
-                                    placeholder="Email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
-                                <input
-                                    type="password"
-                                    placeholder="Password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
-                                {error && <p className="error-message">{error}</p>}
-                                <button type="submit">Login</button>
-                            </form>
-                        </div>
-                    </div>
-                );
-            };
-
-            // Header Component
-            const Header = ({ user, onLogout }) => (
-                <div className="header">
-                    <h1>Albert Newton Code Editor</h1>
-                    {user && (
-                        <div>
-                            <span>Welcome, {user.name} ({user.role})</span>
-                            <button onClick={onLogout} style={{ marginLeft: '10px' }}>Logout</button>
-                        </div>
-                    )}
-                </div>
-            );
-
-            // Filter Component
-            const FilterBar = ({ onFilterChange, repos }) => {
-                const [status, setStatus] = React.useState('');
-                const [author, setAuthor] = React.useState('');
-                const [repo, setRepo] = React.useState('');
-                const [search, setSearch] = React.useState('');
-
-                const handleFilter = () => onFilterChange({ status, author, repo, search });
-
-                return (
-                    <div className="filter-bar">
-                        <select value={status} onChange={(e) => { setStatus(e.target.value); handleFilter(); }}>
-                            <option value="">All Statuses</option>
-                            <option value="open">Open</option>
-                            <option value="review">Review</option>
-                            <option value="merged">Merged</option>
-                            <option value="draft">Draft</option>
-                        </select>
-                        <select value={author} onChange={(e) => { setAuthor(e.target.value); handleFilter(); }}>
-                            <option value="">All Authors</option>
-                            {mockUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
-                        </select>
-                        <select value={repo} onChange={(e) => { setRepo(e.target.value); handleFilter(); }}>
-                            <option value="">All Repos</option>
-                            {repos.map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
-                        <input
-                            type="text"
-                            placeholder="Search PRs..."
-                            value={search}
-                            onChange={(e) => { setSearch(e.target.value); handleFilter(); }}
-                        />
-                    </div>
-                );
-            };
-
-            // PR Item Component
-            const PRItem = React.memo(({ pr, onSelect, isSelected }) => (
-                <div
-                    className={`pr-item ${isSelected ? 'selected' : ''}`}
-                    onClick={() => onSelect(pr)}
-                    style={isSelected ? { background: 'linear-gradient(90deg, #3b4a6b, #4a5b8c)' } : {}}
-                >
-                    <span>{pr.title} ({pr.repo})</span>
-                    <span className={`status-badge status-${pr.status}`}>{pr.status}</span>
-                </div>
-            ));
-
-            // PR List Component
-            const PRList = ({ prs, selectedPR, onSelect }) => {
-                const { listRef, visibleItems } = useVirtualList(prs);
-
-                return (
-                    <div ref={listRef} className="pr-list">
-                        {visibleItems.map(pr => (
-                            <PRItem
-                                key={pr.id}
-                                pr={pr}
-                                onSelect={onSelect}
-                                isSelected={selectedPR && selectedPR.id === pr.id}
-                            />
-                        ))}
-                    </div>
-                );
-            };
-
-            // Diff Line Component
-            const DiffLine = React.memo(({ line, onAddInlineComment }) => (
-                <div
-                    className={`diff-line ${line.type === 'added' ? 'diff-added' : line.type === 'removed' ? 'diff-removed' : ''}`}
-                    onClick={() => onAddInlineComment && onAddInlineComment(line.line)}
-                >
-                    {line.content}
-                </div>
-            ));
-
-            // Diff View Component
-            const DiffView = ({ diff, inlineComments, onAddInlineComment }) => (
-                <div className="diff-view">
-                    {diff.map((line, i) => (
-                        <div key={i}>
-                            <DiffLine line={line} onAddInlineComment={onAddInlineComment} />
-                            {inlineComments[line.line] && inlineComments[line.line].map((c, idx) => (
-                                <div key={idx} className="inline-comment">{c}</div>
-                            ))}
-                        </div>
-                    ))}
-                </div>
-            );
-
-            // Comment Component
-            const Comment = React.memo(({ comment, isInline }) => (
-                <div className={`comment ${isInline ? 'inline-comment' : ''}`}>
-                    {comment}
-                </div>
-            ));
-
-            // PR Details Component
-            const PRDetails = ({ pr, onAddComment, onAddInlineComment, onChangeStatus, user }) => {
-                const [comment, setComment] = React.useState('');
-                const [inlineComment, setInlineComment] = React.useState('');
-                const [inlineLine, setInlineLine] = React.useState(null);
-
-                const handleCommentSubmit = (e) => {
-                    e.preventDefault();
-                    if (comment.trim()) {
-                        onAddComment(pr.id, `${user.name}: ${comment}`);
-                        setComment('');
-                    }
-                };
-
-                const handleInlineCommentSubmit = (e) => {
-                    e.preventDefault();
-                    if (inlineComment.trim() && inlineLine !== null) {
-                        onAddInlineComment(pr.id, inlineLine, `${user.name}: ${inlineComment}`);
-                        setInlineComment('');
-                        setInlineLine(null);
-                    }
-                };
-
-                const handleAddInlineComment = (line) => setInlineLine(line);
-
-                if (!pr) return <div className="pr-details">Select a PR to view details</div>;
-
-                return (
-                    <div className="pr-details">
-                        <h2>{pr.title}</h2>
-                        <p>Repo: {pr.repo} | Author: {pr.author} | Created: {new Date(pr.createdAt).toLocaleDateString()}</p>
-                        <p>Status: {pr.status} | Milestone: {pr.milestone} | Labels: {pr.labels}</p>
-                        <p>Reviewers: {pr.reviewers.join(', ')}</p>
-                        <p>{pr.description}</p>
-                        <div>
-                            <button onClick={() => onChangeStatus(pr.id, 'open')}>Open</button>
-                            <button onClick={() => onChangeStatus(pr.id, 'review')}>Review</button>
-                            <button onClick={() => onChangeStatus(pr.id, 'merged')}>Merge</button>
-                            <button onClick={() => onChangeStatus(pr.id, 'draft')}>Draft</button>
-                        </div>
-                        <h3>Changes</h3>
-                        <DiffView
-                            diff={pr.diff}
-                            inlineComments={pr.inlineComments}
-                            onAddInlineComment={handleAddInlineComment}
-                        />
-                        {inlineLine !== null && (
-                            <form onSubmit={handleInlineCommentSubmit}>
-                                <textarea
-                                    value={inlineComment}
-                                    onChange={(e) => setInlineComment(e.target.value)}
-                                    placeholder={`Comment on line ${inlineLine}...`}
-                                />
-                                <button type="submit">Add Inline Comment</button>
-                                <button type="button" onClick={() => setInlineLine(null)}>Cancel</button>
-                            </form>
-                        )}
-                        <h3>Conversation</h3>
-                        {pr.comments.map((c, i) => <Comment key={i} comment={c} />)}
-                        <form onSubmit={handleCommentSubmit}>
-                            <textarea
-                                value={comment}
-                                onChange={(e) => setComment(e.target.value)}
-                                placeholder="Leave a comment..."
-                            />
-                            <button type="submit">Comment</button>
-                        </form>
-                    </div>
-                );
-            };
-
-            // User List Component
-            const UserList = ({ users }) => (
-                <div className="user-list">
-                    <h3>Team</h3>
-                    {users.map(user => (
-                        <div key={user.id} className="user-item">
-                            {user.name} ({user.role})
-                        </div>
-                    ))}
-                </div>
-            );
-
-            // Dashboard Component
-            const Dashboard = ({ user, prs }) => {
-                const userPRs = prs.filter(pr => pr.author === user.id || pr.reviewers.includes(user.id));
-                return (
-                    <div className="dashboard">
-                        <h2>Dashboard</h2>
-                        <p>Welcome, {user.name}!</p>
-                        <p>Your PRs: {userPRs.length}</p>
-                        <p>Open PRs: {userPRs.filter(pr => pr.status === 'open').length}</p>
-                        <p>In Review: {userPRs.filter(pr => pr.status === 'review').length}</p>
-                        <p>Merged: {userPRs.filter(pr => pr.status === 'merged').length}</p>
-                    </div>
-                );
-            };
-
-            // Main App Component
-            const App = () => {
-                const [user, setUser] = React.useState(null);
-                const [prs, setPRs] = React.useState(generateMockPRs(600));
-                const [selectedPR, setSelectedPR] = React.useState(null);
-                const [filters, setFilters] = React.useState({ status: '', author: '', repo: '', search: '' });
-
-                const filteredPRs = React.useMemo(() => {
-                    return prs.filter(pr => {
-                        const matchesStatus = !filters.status || pr.status === filters.status;
-                        const matchesAuthor = !filters.author || pr.author === filters.author;
-                        const matchesRepo = !filters.repo || pr.repo === filters.repo;
-                        const matchesSearch = !filters.search || 
-                            pr.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-                            pr.description.toLowerCase().includes(filters.search.toLowerCase());
-                        return matchesStatus && matchesAuthor && matchesRepo && matchesSearch;
-                    });
-                }, [prs, filters]);
-
-                const handleLogin = (loggedInUser) => setUser(loggedInUser);
-                const handleLogout = () => setUser(null);
-
-                const addComment = (prId, comment) => {
-                    setPRs(prev => prev.map(pr => 
-                        pr.id === prId ? { ...pr, comments: [...pr.comments, comment] } : pr
-                    ));
-                };
-
-                const addInlineComment = (prId, line, comment) => {
-                    setPRs(prev => prev.map(pr => {
-                        if (pr.id !== prId) return pr;
-                        const newInlineComments = { ...pr.inlineComments };
-                        newInlineComments[line] = [...(newInlineComments[line] || []), comment];
-                        return { ...pr, inlineComments: newInlineComments };
-                    }));
-                };
-
-                const changeStatus = (prId, status) => {
-                    setPRs(prev => prev.map(pr => 
-                        pr.id === prId ? { ...pr, status } : pr
-                    ));
-                };
-
-                const handleFilterChange = (newFilters) => setFilters(newFilters);
-
-                if (!user) {
-                    return <LoginModal onLogin={handleLogin} />;
-                }
-
-                return (
-                    <div>
-                        <Header user={user} onLogout={handleLogout} />
-                        <div className="container">
-                            <div className="sidebar">
-                                <FilterBar onFilterChange={handleFilterChange} repos={mockRepos} />
-                                <PRList prs={filteredPRs} selectedPR={selectedPR} onSelect={setSelectedPR} />
-                                <UserList users={mockUsers} />
-                            </div>
-                            <div className="main-content">
-                                <Dashboard user={user} prs={prs} />
-                                <PRDetails
-                                    pr={selectedPR}
-                                    onAddComment={addComment}
-                                    onAddInlineComment={addInlineComment}
-                                    onChangeStatus={changeStatus}
-                                    user={user}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                );
-            };
-
-            // Render the App
-            try {
-                const rootElement = document.getElementById('root');
-                console.log('Root element found:', rootElement);
-                ReactDOM.render(<App />, rootElement);
-                console.log('App rendered successfully');
-            } catch (error) {
-                console.error('Render failed:', error);
-                document.getElementById('root').innerHTML = 
-                    '<div class="error-message">Render failed: ' + error.message + '</div>';
+            if (!user) {
+                return <LoginModal onLogin={handleLogin} />;
             }
+
+            return (
+                <div>
+                    <Header user={user} onLogout={handleLogout} />
+                    <div className="container">
+                        <div className="sidebar">
+                            <FilterBar onFilterChange={handleFilterChange} repos={mockRepos} />
+                            <PRList prs={filteredPRs} selectedPR={selectedPR} onSelect={setSelectedPR} />
+                            <UserList users={mockUsers} />
+                        </div>
+                        <div className="main-content">
+                            <Dashboard user={user} prs={prs} />
+                            <PRDetails
+                                pr={selectedPR}
+                                onAddComment={addComment}
+                                onAddInlineComment={addInlineComment}
+                                onChangeStatus={changeStatus}
+                                user={user}
+                            />
+                        </div>
+                    </div>
+                </div>
+            );
         };
+
+        // Render Immediately
+        console.log('Rendering app');
+        const rootElement = document.getElementById('root');
+        if (!rootElement) {
+            document.body.innerHTML = '<div class="error-message">Root element not found</div>';
+            console.error('Root element #root not found');
+        } else if (typeof ReactDOM === 'undefined') {
+            rootElement.innerHTML = '<div class="error-message">ReactDOM not loaded</div>';
+            console.error('ReactDOM not available');
+        } else {
+            ReactDOM.render(<App />, rootElement);
+            console.log('App rendered successfully');
+        }
     </script>
 </body>
 </html>
