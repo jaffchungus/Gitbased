@@ -5,131 +5,197 @@
     <title>Git PR Powerhouse</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            padding: 20px;
-            background: #f0f2f5;
-            line-height: 1.5;
+            padding: 0;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
         .container {
-            max-width: 1400px;
-            margin: 0 auto;
+            max-width: 1500px;
+            margin: 40px auto;
             display: grid;
             grid-template-columns: 1fr 3fr;
-            gap: 20px;
+            gap: 30px;
+            padding: 20px;
         }
         .sidebar {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.5s ease-out;
         }
         .main-content {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.7s ease-out;
         }
         .pr-list {
-            height: 80vh;
+            height: 70vh;
             overflow-y: auto;
-            border: 1px solid #e1e4e8;
-            border-radius: 4px;
+            border-radius: 15px;
+            border: 2px solid #e1e4e8;
+            background: #fff;
+            transition: all 0.3s ease;
         }
         .pr-item {
-            padding: 12px;
+            padding: 15px;
             border-bottom: 1px solid #e1e4e8;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: linear-gradient(90deg, #f9f9f9, #fff);
+            transition: transform 0.2s ease, background 0.3s ease;
         }
         .pr-item:hover {
-            background: #f6f8fa;
+            background: linear-gradient(90deg, #e6f3ff, #f0f8ff);
+            transform: scale(1.02);
         }
         .pr-details {
-            margin-top: 20px;
+            margin-top: 25px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
         .diff-view {
             background: #f6f8fa;
-            padding: 15px;
-            border-radius: 6px;
-            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-            font-size: 12px;
-            white-space: pre-wrap;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
             max-height: 400px;
             overflow-y: auto;
+            border: 1px solid #ddd;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
         }
         .diff-line {
-            padding: 2px 0;
+            padding: 4px 0;
+            transition: background 0.2s ease;
         }
-        .diff-added { background: #e6ffe6; color: #2ea043; }
-        .diff-removed { background: #ffe6e6; color: #cb2431; }
+        .diff-added { background: #d4f4d4; color: #2ea043; }
+        .diff-removed { background: #fddddd; color: #cb2431; }
+        .diff-line:hover { background: #e0e0e0; }
         .comment {
             border: 1px solid #e1e4e8;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 10px;
             background: #fff;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
         }
+        .comment:hover { transform: translateY(-2px); }
         .inline-comment {
-            margin-left: 20px;
+            margin-left: 25px;
             background: #f1f8ff;
             border-color: #0366d6;
         }
         textarea {
             width: 100%;
-            min-height: 80px;
+            min-height: 120px;
             resize: vertical;
-            border: 1px solid #e1e4e8;
-            border-radius: 4px;
-            padding: 8px;
+            border: 2px solid #e1e4e8;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        textarea:focus {
+            border-color: #0366d6;
+            outline: none;
+            box-shadow: 0 0 5px rgba(3, 102, 214, 0.5);
         }
         button {
-            padding: 6px 12px;
-            background: #0366d6;
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #0366d6, #00ddeb);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 25px;
             cursor: pointer;
-            margin-right: 5px;
+            font-weight: 600;
+            transition: transform 0.2s ease, background 0.3s ease;
+            box-shadow: 0 4px 15px rgba(3, 102, 214, 0.4);
         }
         button:hover {
-            background: #005cc5;
+            background: linear-gradient(45deg, #005cc5, #00b8d4);
+            transform: translateY(-2px);
         }
         .filter-bar {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
         select, input {
-            padding: 6px;
-            border: 1px solid #e1e4e8;
-            border-radius: 4px;
+            padding: 10px;
+            border: 2px solid #e1e4e8;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        select:focus, input:focus {
+            border-color: #0366d6;
+            outline: none;
         }
         .status-badge {
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
             color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
         .status-open { background: #28a745; }
         .status-review { background: #0366d6; }
         .status-merged { background: #6f42c1; }
         .status-draft { background: #6a737d; }
         .user-list {
-            margin-top: 20px;
+            margin-top: 25px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
         .user-item {
-            padding: 8px;
+            padding: 12px;
             border-bottom: 1px solid #e1e4e8;
+            transition: background 0.2s ease;
+        }
+        .user-item:hover {
+            background: #f6f8fa;
+        }
+        h1, h2, h3 {
+            color: #1e3c72;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         .error-message {
-            color: red;
+            color: #ff4d4d;
             padding: 20px;
             text-align: center;
+            font-size: 18px;
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Fira+Code&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="root">Loading...</div>
@@ -139,16 +205,19 @@
     <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
 
     <script>
-        // Wait for scripts to load
-        function initApp() {
+        console.log('Script started');
+
+        window.onload = () => {
+            console.log('Window loaded');
+
             if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') {
                 document.getElementById('root').innerHTML = 
-                    '<div class="error-message">React or ReactDOM failed to load. Check network or CDN.</div>';
-                console.error('React or ReactDOM not available');
+                    '<div class="error-message">React or ReactDOM not loaded</div>';
+                console.error('React or ReactDOM missing');
                 return;
             }
 
-            console.log('React and ReactDOM loaded, starting app initialization');
+            console.log('React and ReactDOM detected');
 
             // Mock Data Generation
             const generateMockPRs = (count) => {
@@ -249,7 +318,7 @@
                 <div
                     className={`pr-item ${isSelected ? 'selected' : ''}`}
                     onClick={() => onSelect(pr)}
-                    style={isSelected ? { background: '#e6f3ff' } : {}}
+                    style={isSelected ? { background: 'linear-gradient(90deg, #d6eaff, #e6f3ff)' } : {}}
                 >
                     <span>{pr.title}</span>
                     <span className={`status-badge status-${pr.status}`}>
@@ -454,32 +523,14 @@
             // Render the App
             try {
                 const rootElement = document.getElementById('root');
-                if (!rootElement) {
-                    document.body.innerHTML = '<div class="error-message">Root element not found</div>';
-                    throw new Error('Root element #root not found');
-                }
-                console.log('Rendering App with ReactDOM.render');
+                console.log('Root element found:', rootElement);
                 ReactDOM.render(<App />, rootElement);
                 console.log('App rendered successfully');
             } catch (error) {
-                console.error('Failed to render app:', error);
+                console.error('Render failed:', error);
                 document.getElementById('root').innerHTML = 
-                    '<div class="error-message">Failed to render app: ' + error.message + '</div>';
+                    '<div class="error-message">Render failed: ' + error.message + '</div>';
             }
-        }
-
-        // Wait for DOM and scripts to load
-        window.onload = () => {
-            console.log('Window loaded, checking scripts');
-            const timeout = setTimeout(() => {
-                if (document.getElementById('root').innerHTML === 'Loading...') {
-                    document.getElementById('root').innerHTML = 
-                        '<div class="error-message">App failed to load within 5 seconds. Check console.</div>';
-                    console.error('App rendering timed out');
-                }
-            }, 5000);
-            initApp();
-            clearTimeout(timeout);
         };
     </script>
 </body>
