@@ -124,36 +124,53 @@
             padding: 8px;
             border-bottom: 1px solid #e1e4e8;
         }
+        .error-message {
+            color: red;
+            padding: 20px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">Loading...</div>
 
-    <!-- CDN Scripts -->
+    <!-- CDN Scripts with Fallback -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
     <script>
+        // Check if React and ReactDOM are loaded
+        if (typeof React === 'undefined' || typeof ReactDOM === 'undefined') {
+            document.getElementById('root').innerHTML = 
+                '<div class="error-message">Failed to load React or ReactDOM. Check your network or CDN availability.</div>';
+            throw new Error('React or ReactDOM not loaded');
+        }
+
+        console.log('React and ReactDOM loaded successfully');
+
         // Mock Data Generation
-        const generateMockPRs = (count) => Array.from({ length: count }, (_, i) => ({
-            id: i + 1,
-            title: `PR #${i + 1}: ${['Feature', 'Bugfix', 'Refactor', 'Docs'][i % 4]} Update`,
-            author: `user${(i % 10) + 1}`,
-            status: ['open', 'review', 'merged', 'draft'][i % 4],
-            createdAt: new Date(2025, 2, Math.floor(Math.random() * 28) + 1).toISOString(),
-            description: `This PR addresses issue #${i}. Changes include updates to core functionality.`,
-            diff: [
-                { line: 1, type: 'context', content: ' function hello() {' },
-                { line: 2, type: 'removed', content: '-    console.log("Old code");' },
-                { line: 3, type: 'added', content: '+    console.log("New code");' },
-                { line: 4, type: 'context', content: ' }' }
-            ],
-            comments: [],
-            inlineComments: {},
-            reviewers: [`user${(i % 5) + 1}`, `user${(i % 5) + 2}`],
-            labels: ['enhancement', 'bug', 'docs'][i % 3],
-            milestone: `v${Math.floor(i / 10) + 1}.0`
-        }));
+        const generateMockPRs = (count) => {
+            console.log('Generating', count, 'mock PRs');
+            return Array.from({ length: count }, (_, i) => ({
+                id: i + 1,
+                title: `PR #${i + 1}: ${['Feature', 'Bugfix', 'Refactor', 'Docs'][i % 4]} Update`,
+                author: `user${(i % 10) + 1}`,
+                status: ['open', 'review', 'merged', 'draft'][i % 4],
+                createdAt: new Date(2025, 2, Math.floor(Math.random() * 28) + 1).toISOString(),
+                description: `This PR addresses issue #${i}. Changes include updates to core functionality.`,
+                diff: [
+                    { line: 1, type: 'context', content: ' function hello() {' },
+                    { line: 2, type: 'removed', content: '-    console.log("Old code");' },
+                    { line: 3, type: 'added', content: '+    console.log("New code");' },
+                    { line: 4, type: 'context', content: ' }' }
+                ],
+                comments: [],
+                inlineComments: {},
+                reviewers: [`user${(i % 5) + 1}`, `user${(i % 5) + 2}`],
+                labels: ['enhancement', 'bug', 'docs'][i % 3],
+                milestone: `v${Math.floor(i / 10) + 1}.0`
+            }));
+        };
 
         const mockUsers = Array.from({ length: 20 }, (_, i) => ({
             id: `user${i + 1}`,
@@ -192,6 +209,25 @@
             }, [items.length]);
 
             return { listRef, visibleItems: items.slice(range.start, range.end), range };
+        };
+
+        // Error Boundary Component
+        const ErrorBoundary = ({ children }) => {
+            const [hasError, setHasError] = React.useState(false);
+
+            React.useEffect(() => {
+                const errorHandler = (error) => {
+                    console.error('Error caught in boundary:', error);
+                    setHasError(true);
+                };
+                window.addEventListener('error', errorHandler);
+                return () => window.removeEventListener('error', errorHandler);
+            }, []);
+
+            if (hasError) {
+                return <div className="error-message">Something went wrong. Check the console for details.</div>;
+            }
+            return children;
         };
 
         // Filter Component
@@ -378,6 +414,7 @@
             const [filters, setFilters] = React.useState({ status: '', author: '', search: '' });
 
             const filteredPRs = React.useMemo(() => {
+                console.log('Filtering PRs with:', filters);
                 return prs.filter(pr => {
                     const matchesStatus = !filters.status || pr.status === filters.status;
                     const matchesAuthor = !filters.author || pr.author === filters.author;
@@ -412,27 +449,41 @@
             const handleFilterChange = (newFilters) => setFilters(newFilters);
 
             return (
-                <div className="container">
-                    <div className="sidebar">
-                        <FilterBar onFilterChange={handleFilterChange} />
-                        <PRList prs={filteredPRs} selectedPR={selectedPR} onSelect={setSelectedPR} />
-                        <UserList users={mockUsers} />
+                <ErrorBoundary>
+                    <div className="container">
+                        <div className="sidebar">
+                            <FilterBar onFilterChange={handleFilterChange} />
+                            <PRList prs={filteredPRs} selectedPR={selectedPR} onSelect={setSelectedPR} />
+                            <UserList users={mockUsers} />
+                        </div>
+                        <div className="main-content">
+                            <h1>Git PR Powerhouse</h1>
+                            <PRDetails
+                                pr={selectedPR}
+                                onAddComment={addComment}
+                                onAddInlineComment={addInlineComment}
+                                onChangeStatus={changeStatus}
+                            />
+                        </div>
                     </div>
-                    <div className="main-content">
-                        <h1>Git PR Powerhouse</h1>
-                        <PRDetails
-                            pr={selectedPR}
-                            onAddComment={addComment}
-                            onAddInlineComment={addInlineComment}
-                            onChangeStatus={changeStatus}
-                        />
-                    </div>
-                </div>
+                </ErrorBoundary>
             );
         };
 
-        // Render the App
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        // Render the App with Error Handling
+        try {
+            const rootElement = document.getElementById('root');
+            if (!rootElement) {
+                document.body.innerHTML = '<div class="error-message">Root element not found</div>';
+                throw new Error('Root element #root not found');
+            }
+            console.log('Rendering App');
+            ReactDOM.createRoot(rootElement).render(<App />);
+        } catch (error) {
+            console.error('Failed to render app:', error);
+            document.getElementById('root').innerHTML = 
+                '<div class="error-message">Failed to render app. See console for details.</div>';
+        }
     </script>
 </body>
 </html>
