@@ -2,183 +2,221 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Git PR Powerhouse</title>
+    <title>Albert Newton Code Editor</title>
     <style>
         body {
-            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: #fff;
+            background: linear-gradient(145deg, #0d1b2a, #1b263b);
+            color: #e0e1dd;
             min-height: 100vh;
             overflow-x: hidden;
         }
         .container {
-            max-width: 1500px;
+            max-width: 1600px;
             margin: 40px auto;
             display: grid;
-            grid-template-columns: 1fr 3fr;
-            gap: 30px;
+            grid-template-columns: 300px 1fr;
+            gap: 25px;
             padding: 20px;
         }
         .sidebar {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
+            background: rgba(27, 38, 59, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
             animation: slideIn 0.5s ease-out;
         }
         .main-content {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px);
+            background: rgba(27, 38, 59, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
             animation: fadeIn 0.7s ease-out;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background: rgba(13, 27, 42, 0.9);
+            border-bottom: 1px solid #415a77;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         .pr-list {
             height: 70vh;
             overflow-y: auto;
-            border-radius: 15px;
-            border: 2px solid #e1e4e8;
-            background: #fff;
-            transition: all 0.3s ease;
+            border-radius: 10px;
+            border: 1px solid #415a77;
+            background: #1b263b;
         }
         .pr-item {
             padding: 15px;
-            border-bottom: 1px solid #e1e4e8;
+            border-bottom: 1px solid #415a77;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(90deg, #f9f9f9, #fff);
-            transition: transform 0.2s ease, background 0.3s ease;
+            background: linear-gradient(90deg, #1b263b, #2a3550);
+            transition: all 0.3s ease;
         }
         .pr-item:hover {
-            background: linear-gradient(90deg, #e6f3ff, #f0f8ff);
-            transform: scale(1.02);
+            background: linear-gradient(90deg, #2a3550, #3b4a6b);
+            transform: scale(1.01);
         }
         .pr-details {
-            margin-top: 25px;
+            margin-top: 20px;
             padding: 20px;
-            background: #fff;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: #2a3550;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
         .diff-view {
-            background: #f6f8fa;
-            padding: 20px;
-            border-radius: 10px;
-            font-family: 'Fira Code', monospace;
-            font-size: 14px;
+            background: #1b263b;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
             max-height: 400px;
             overflow-y: auto;
-            border: 1px solid #ddd;
-            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+            border: 1px solid #415a77;
         }
         .diff-line {
-            padding: 4px 0;
+            padding: 3px 0;
             transition: background 0.2s ease;
         }
-        .diff-added { background: #d4f4d4; color: #2ea043; }
-        .diff-removed { background: #fddddd; color: #cb2431; }
-        .diff-line:hover { background: #e0e0e0; }
+        .diff-added { background: #2d6a4f; color: #95d5b2; }
+        .diff-removed { background: #641220; color: #ff758f; }
+        .diff-line:hover { background: #3b4a6b; }
         .comment {
-            border: 1px solid #e1e4e8;
+            border: 1px solid #415a77;
             padding: 15px;
-            margin: 15px 0;
-            border-radius: 10px;
-            background: #fff;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            margin: 10px 0;
+            border-radius: 8px;
+            background: #2a3550;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
             transition: transform 0.2s ease;
         }
         .comment:hover { transform: translateY(-2px); }
         .inline-comment {
-            margin-left: 25px;
-            background: #f1f8ff;
-            border-color: #0366d6;
+            margin-left: 20px;
+            background: #3b4a6b;
+            border-color: #778da9;
         }
         textarea {
             width: 100%;
-            min-height: 120px;
+            min-height: 100px;
             resize: vertical;
-            border: 2px solid #e1e4e8;
-            border-radius: 10px;
-            padding: 12px;
-            font-size: 16px;
+            border: 1px solid #415a77;
+            border-radius: 8px;
+            padding: 10px;
+            background: #1b263b;
+            color: #e0e1dd;
+            font-size: 14px;
             transition: border-color 0.3s ease;
         }
         textarea:focus {
-            border-color: #0366d6;
+            border-color: #778da9;
             outline: none;
-            box-shadow: 0 0 5px rgba(3, 102, 214, 0.5);
+            box-shadow: 0 0 5px rgba(119, 141, 169, 0.5);
         }
         button {
             padding: 10px 20px;
-            background: linear-gradient(45deg, #0366d6, #00ddeb);
-            color: white;
+            background: linear-gradient(45deg, #778da9, #95d5b2);
+            color: #0d1b2a;
             border: none;
-            border-radius: 25px;
+            border-radius: 20px;
             cursor: pointer;
             font-weight: 600;
-            transition: transform 0.2s ease, background 0.3s ease;
-            box-shadow: 0 4px 15px rgba(3, 102, 214, 0.4);
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
         }
         button:hover {
-            background: linear-gradient(45deg, #005cc5, #00b8d4);
+            background: linear-gradient(45deg, #95d5b2, #778da9);
             transform: translateY(-2px);
         }
         .filter-bar {
             display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            background: rgba(255, 255, 255, 0.8);
+            gap: 10px;
+            margin-bottom: 15px;
             padding: 15px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: rgba(43, 53, 80, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
         }
         select, input {
-            padding: 10px;
-            border: 2px solid #e1e4e8;
-            border-radius: 10px;
-            font-size: 16px;
+            padding: 8px;
+            border: 1px solid #415a77;
+            border-radius: 8px;
+            background: #1b263b;
+            color: #e0e1dd;
+            font-size: 14px;
             transition: border-color 0.3s ease;
         }
         select:focus, input:focus {
-            border-color: #0366d6;
+            border-color: #778da9;
             outline: none;
         }
         .status-badge {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-            color: white;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-        .status-open { background: #28a745; }
-        .status-review { background: #0366d6; }
-        .status-merged { background: #6f42c1; }
-        .status-draft { background: #6a737d; }
-        .user-list {
-            margin-top: 25px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 15px;
+            padding: 5px 10px;
             border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            font-size: 12px;
+            font-weight: 500;
+            color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .status-open { background: #2d6a4f; }
+        .status-review { background: #778da9; }
+        .status-merged { background: #7209b7; }
+        .status-draft { background: #6a737d; }
+        .user-list, .dashboard {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(43, 53, 80, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
         }
         .user-item {
-            padding: 12px;
-            border-bottom: 1px solid #e1e4e8;
+            padding: 10px;
+            border-bottom: 1px solid #415a77;
             transition: background 0.2s ease;
         }
-        .user-item:hover {
-            background: #f6f8fa;
+        .user-item:hover { background: #3b4a6b; }
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .login-box {
+            background: #1b263b;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            width: 400px;
+            text-align: center;
+            animation: popIn 0.3s ease-out;
+        }
+        .login-box input {
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 8px;
         }
         h1, h2, h3 {
-            color: #1e3c72;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            color: #95d5b2;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
         @keyframes slideIn {
             from { transform: translateX(-100%); opacity: 0; }
@@ -188,14 +226,18 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
         .error-message {
-            color: #ff4d4d;
+            color: #ff758f;
             padding: 20px;
             text-align: center;
             font-size: 18px;
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Fira+Code&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="root">Loading...</div>
@@ -219,35 +261,40 @@
 
             console.log('React and ReactDOM detected');
 
-            // Mock Data Generation
+            // Mock Data
             const generateMockPRs = (count) => {
                 console.log('Generating', count, 'mock PRs');
                 return Array.from({ length: count }, (_, i) => ({
                     id: i + 1,
-                    title: `PR #${i + 1}: ${['Feature', 'Bugfix', 'Refactor', 'Docs'][i % 4]} Update`,
+                    title: `PR #${i + 1}: ${['Feature', 'Fix', 'Refactor', 'Docs'][i % 4]}`,
                     author: `user${(i % 10) + 1}`,
                     status: ['open', 'review', 'merged', 'draft'][i % 4],
                     createdAt: new Date(2025, 2, Math.floor(Math.random() * 28) + 1).toISOString(),
-                    description: `This PR addresses issue #${i}. Changes include updates to core functionality.`,
+                    description: `This PR addresses issue #${i}. Includes various changes.`,
                     diff: [
-                        { line: 1, type: 'context', content: ' function hello() {' },
-                        { line: 2, type: 'removed', content: '-    console.log("Old code");' },
-                        { line: 3, type: 'added', content: '+    console.log("New code");' },
+                        { line: 1, type: 'context', content: ' function main() {' },
+                        { line: 2, type: 'removed', content: '-    console.log("Old");' },
+                        { line: 3, type: 'added', content: '+    console.log("New");' },
                         { line: 4, type: 'context', content: ' }' }
                     ],
                     comments: [],
                     inlineComments: {},
                     reviewers: [`user${(i % 5) + 1}`, `user${(i % 5) + 2}`],
                     labels: ['enhancement', 'bug', 'docs'][i % 3],
-                    milestone: `v${Math.floor(i / 10) + 1}.0`
+                    milestone: `v${Math.floor(i / 10) + 1}.0`,
+                    repo: `repo${(i % 3) + 1}`
                 }));
             };
 
-            const mockUsers = Array.from({ length: 20 }, (_, i) => ({
+            const mockUsers = Array.from({ length: 25 }, (_, i) => ({
                 id: `user${i + 1}`,
                 name: `User ${i + 1}`,
-                role: ['developer', 'reviewer', 'admin'][i % 3]
+                email: `user${i + 1}@ance.com`,
+                role: ['developer', 'reviewer', 'admin'][i % 3],
+                password: `pass${i + 1}` // Mock password
             }));
+
+            const mockRepos = ['repo1', 'repo2', 'repo3'];
 
             // Utility Functions
             const debounce = (fn, delay) => {
@@ -258,7 +305,7 @@
                 };
             };
 
-            // Custom Hook for Virtualization
+            // Virtual List Hook
             const useVirtualList = (items, itemHeight = 50) => {
                 const [range, setRange] = React.useState({ start: 0, end: 20 });
                 const listRef = React.useRef(null);
@@ -282,13 +329,69 @@
                 return { listRef, visibleItems: items.slice(range.start, range.end), range };
             };
 
+            // Login Component
+            const LoginModal = ({ onLogin }) => {
+                const [email, setEmail] = React.useState('');
+                const [password, setPassword] = React.useState('');
+                const [error, setError] = React.useState('');
+
+                const handleLogin = (e) => {
+                    e.preventDefault();
+                    const user = mockUsers.find(u => u.email === email && u.password === password);
+                    if (user) {
+                        onLogin(user);
+                        setError('');
+                    } else {
+                        setError('Invalid credentials');
+                    }
+                };
+
+                return (
+                    <div className="login-modal">
+                        <div className="login-box">
+                            <h2>Login to ANCE</h2>
+                            <form onSubmit={handleLogin}>
+                                <input
+                                    type="email"
+                                    placeholder="Email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                                <input
+                                    type="password"
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                                {error && <p className="error-message">{error}</p>}
+                                <button type="submit">Login</button>
+                            </form>
+                        </div>
+                    </div>
+                );
+            };
+
+            // Header Component
+            const Header = ({ user, onLogout }) => (
+                <div className="header">
+                    <h1>Albert Newton Code Editor</h1>
+                    {user && (
+                        <div>
+                            <span>Welcome, {user.name} ({user.role})</span>
+                            <button onClick={onLogout} style={{ marginLeft: '10px' }}>Logout</button>
+                        </div>
+                    )}
+                </div>
+            );
+
             // Filter Component
-            const FilterBar = ({ onFilterChange }) => {
+            const FilterBar = ({ onFilterChange, repos }) => {
                 const [status, setStatus] = React.useState('');
                 const [author, setAuthor] = React.useState('');
+                const [repo, setRepo] = React.useState('');
                 const [search, setSearch] = React.useState('');
 
-                const handleFilter = () => onFilterChange({ status, author, search });
+                const handleFilter = () => onFilterChange({ status, author, repo, search });
 
                 return (
                     <div className="filter-bar">
@@ -302,6 +405,10 @@
                         <select value={author} onChange={(e) => { setAuthor(e.target.value); handleFilter(); }}>
                             <option value="">All Authors</option>
                             {mockUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                        </select>
+                        <select value={repo} onChange={(e) => { setRepo(e.target.value); handleFilter(); }}>
+                            <option value="">All Repos</option>
+                            {repos.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                         <input
                             type="text"
@@ -318,12 +425,10 @@
                 <div
                     className={`pr-item ${isSelected ? 'selected' : ''}`}
                     onClick={() => onSelect(pr)}
-                    style={isSelected ? { background: 'linear-gradient(90deg, #d6eaff, #e6f3ff)' } : {}}
+                    style={isSelected ? { background: 'linear-gradient(90deg, #3b4a6b, #4a5b8c)' } : {}}
                 >
-                    <span>{pr.title}</span>
-                    <span className={`status-badge status-${pr.status}`}>
-                        {pr.status}
-                    </span>
+                    <span>{pr.title} ({pr.repo})</span>
+                    <span className={`status-badge status-${pr.status}`}>{pr.status}</span>
                 </div>
             ));
 
@@ -377,7 +482,7 @@
             ));
 
             // PR Details Component
-            const PRDetails = ({ pr, onAddComment, onAddInlineComment, onChangeStatus }) => {
+            const PRDetails = ({ pr, onAddComment, onAddInlineComment, onChangeStatus, user }) => {
                 const [comment, setComment] = React.useState('');
                 const [inlineComment, setInlineComment] = React.useState('');
                 const [inlineLine, setInlineLine] = React.useState(null);
@@ -385,7 +490,7 @@
                 const handleCommentSubmit = (e) => {
                     e.preventDefault();
                     if (comment.trim()) {
-                        onAddComment(pr.id, comment);
+                        onAddComment(pr.id, `${user.name}: ${comment}`);
                         setComment('');
                     }
                 };
@@ -393,7 +498,7 @@
                 const handleInlineCommentSubmit = (e) => {
                     e.preventDefault();
                     if (inlineComment.trim() && inlineLine !== null) {
-                        onAddInlineComment(pr.id, inlineLine, inlineComment);
+                        onAddInlineComment(pr.id, inlineLine, `${user.name}: ${inlineComment}`);
                         setInlineComment('');
                         setInlineLine(null);
                     }
@@ -406,17 +511,17 @@
                 return (
                     <div className="pr-details">
                         <h2>{pr.title}</h2>
-                        <p>Author: {pr.author} | Created: {new Date(pr.createdAt).toLocaleDateString()}</p>
+                        <p>Repo: {pr.repo} | Author: {pr.author} | Created: {new Date(pr.createdAt).toLocaleDateString()}</p>
                         <p>Status: {pr.status} | Milestone: {pr.milestone} | Labels: {pr.labels}</p>
                         <p>Reviewers: {pr.reviewers.join(', ')}</p>
                         <p>{pr.description}</p>
                         <div>
-                            <button onClick={() => onChangeStatus(pr.id, 'open')}>Set Open</button>
-                            <button onClick={() => onChangeStatus(pr.id, 'review')}>Set Review</button>
-                            <button onClick={() => onChangeStatus(pr.id, 'merged')}>Set Merged</button>
-                            <button onClick={() => onChangeStatus(pr.id, 'draft')}>Set Draft</button>
+                            <button onClick={() => onChangeStatus(pr.id, 'open')}>Open</button>
+                            <button onClick={() => onChangeStatus(pr.id, 'review')}>Review</button>
+                            <button onClick={() => onChangeStatus(pr.id, 'merged')}>Merge</button>
+                            <button onClick={() => onChangeStatus(pr.id, 'draft')}>Draft</button>
                         </div>
-                        <h3>Diff</h3>
+                        <h3>Changes</h3>
                         <DiffView
                             diff={pr.diff}
                             inlineComments={pr.inlineComments}
@@ -433,15 +538,15 @@
                                 <button type="button" onClick={() => setInlineLine(null)}>Cancel</button>
                             </form>
                         )}
-                        <h3>Comments</h3>
+                        <h3>Conversation</h3>
                         {pr.comments.map((c, i) => <Comment key={i} comment={c} />)}
                         <form onSubmit={handleCommentSubmit}>
                             <textarea
                                 value={comment}
                                 onChange={(e) => setComment(e.target.value)}
-                                placeholder="Add a comment..."
+                                placeholder="Leave a comment..."
                             />
-                            <button type="submit">Add Comment</button>
+                            <button type="submit">Comment</button>
                         </form>
                     </div>
                 );
@@ -450,7 +555,7 @@
             // User List Component
             const UserList = ({ users }) => (
                 <div className="user-list">
-                    <h3>Users</h3>
+                    <h3>Team</h3>
                     {users.map(user => (
                         <div key={user.id} className="user-item">
                             {user.name} ({user.role})
@@ -459,23 +564,42 @@
                 </div>
             );
 
+            // Dashboard Component
+            const Dashboard = ({ user, prs }) => {
+                const userPRs = prs.filter(pr => pr.author === user.id || pr.reviewers.includes(user.id));
+                return (
+                    <div className="dashboard">
+                        <h2>Dashboard</h2>
+                        <p>Welcome, {user.name}!</p>
+                        <p>Your PRs: {userPRs.length}</p>
+                        <p>Open PRs: {userPRs.filter(pr => pr.status === 'open').length}</p>
+                        <p>In Review: {userPRs.filter(pr => pr.status === 'review').length}</p>
+                        <p>Merged: {userPRs.filter(pr => pr.status === 'merged').length}</p>
+                    </div>
+                );
+            };
+
             // Main App Component
             const App = () => {
-                const [prs, setPRs] = React.useState(generateMockPRs(500));
+                const [user, setUser] = React.useState(null);
+                const [prs, setPRs] = React.useState(generateMockPRs(600));
                 const [selectedPR, setSelectedPR] = React.useState(null);
-                const [filters, setFilters] = React.useState({ status: '', author: '', search: '' });
+                const [filters, setFilters] = React.useState({ status: '', author: '', repo: '', search: '' });
 
                 const filteredPRs = React.useMemo(() => {
-                    console.log('Filtering PRs with:', filters);
                     return prs.filter(pr => {
                         const matchesStatus = !filters.status || pr.status === filters.status;
                         const matchesAuthor = !filters.author || pr.author === filters.author;
+                        const matchesRepo = !filters.repo || pr.repo === filters.repo;
                         const matchesSearch = !filters.search || 
                             pr.title.toLowerCase().includes(filters.search.toLowerCase()) ||
                             pr.description.toLowerCase().includes(filters.search.toLowerCase());
-                        return matchesStatus && matchesAuthor && matchesSearch;
+                        return matchesStatus && matchesAuthor && matchesRepo && matchesSearch;
                     });
                 }, [prs, filters]);
+
+                const handleLogin = (loggedInUser) => setUser(loggedInUser);
+                const handleLogout = () => setUser(null);
 
                 const addComment = (prId, comment) => {
                     setPRs(prev => prev.map(pr => 
@@ -500,21 +624,29 @@
 
                 const handleFilterChange = (newFilters) => setFilters(newFilters);
 
+                if (!user) {
+                    return <LoginModal onLogin={handleLogin} />;
+                }
+
                 return (
-                    <div className="container">
-                        <div className="sidebar">
-                            <FilterBar onFilterChange={handleFilterChange} />
-                            <PRList prs={filteredPRs} selectedPR={selectedPR} onSelect={setSelectedPR} />
-                            <UserList users={mockUsers} />
-                        </div>
-                        <div className="main-content">
-                            <h1>Git PR Powerhouse</h1>
-                            <PRDetails
-                                pr={selectedPR}
-                                onAddComment={addComment}
-                                onAddInlineComment={addInlineComment}
-                                onChangeStatus={changeStatus}
-                            />
+                    <div>
+                        <Header user={user} onLogout={handleLogout} />
+                        <div className="container">
+                            <div className="sidebar">
+                                <FilterBar onFilterChange={handleFilterChange} repos={mockRepos} />
+                                <PRList prs={filteredPRs} selectedPR={selectedPR} onSelect={setSelectedPR} />
+                                <UserList users={mockUsers} />
+                            </div>
+                            <div className="main-content">
+                                <Dashboard user={user} prs={prs} />
+                                <PRDetails
+                                    pr={selectedPR}
+                                    onAddComment={addComment}
+                                    onAddInlineComment={addInlineComment}
+                                    onChangeStatus={changeStatus}
+                                    user={user}
+                                />
+                            </div>
                         </div>
                     </div>
                 );
