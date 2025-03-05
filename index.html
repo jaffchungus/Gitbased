@@ -2,64 +2,127 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Git PR Review</title>
+    <title>Git PR Powerhouse</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 20px;
-            background: #f5f5f5;
+            background: #f0f2f5;
+            line-height: 1.5;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 20px;
+        }
+        .sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .main-content {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         .pr-list {
-            height: 70vh;
+            height: 80vh;
             overflow-y: auto;
-            border: 1px solid #ddd;
-            background: white;
+            border: 1px solid #e1e4e8;
             border-radius: 4px;
         }
         .pr-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
+            padding: 12px;
+            border-bottom: 1px solid #e1e4e8;
             cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .pr-item:hover {
-            background: #f9f9f9;
+            background: #f6f8fa;
         }
         .pr-details {
             margin-top: 20px;
-            padding: 15px;
-            background: white;
-            border-radius: 4px;
-            border: 1px solid #ddd;
         }
-        .comment-box {
-            margin-top: 15px;
+        .diff-view {
+            background: #f6f8fa;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .diff-line {
+            padding: 2px 0;
+        }
+        .diff-added { background: #e6ffe6; color: #2ea043; }
+        .diff-removed { background: #ffe6e6; color: #cb2431; }
+        .comment {
+            border: 1px solid #e1e4e8;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #fff;
+        }
+        .inline-comment {
+            margin-left: 20px;
+            background: #f1f8ff;
+            border-color: #0366d6;
         }
         textarea {
             width: 100%;
-            min-height: 100px;
+            min-height: 80px;
             resize: vertical;
-            margin-top: 5px;
+            border: 1px solid #e1e4e8;
+            border-radius: 4px;
+            padding: 8px;
         }
         button {
-            padding: 8px 16px;
-            background: #007bff;
+            padding: 6px 12px;
+            background: #0366d6;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            margin-right: 5px;
         }
         button:hover {
-            background: #0056b3;
+            background: #005cc5;
         }
-        .status {
-            margin-left: 10px;
-            font-size: 0.9em;
-            color: #666;
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        select, input {
+            padding: 6px;
+            border: 1px solid #e1e4e8;
+            border-radius: 4px;
+        }
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: white;
+        }
+        .status-open { background: #28a745; }
+        .status-review { background: #0366d6; }
+        .status-merged { background: #6f42c1; }
+        .status-draft { background: #6a737d; }
+        .user-list {
+            margin-top: 20px;
+        }
+        .user-item {
+            padding: 8px;
+            border-bottom: 1px solid #e1e4e8;
         }
     </style>
 </head>
@@ -71,57 +134,167 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
     <script>
-        // Mock data (replace with real API calls in production)
-        const mockPRs = Array.from({ length: 100 }, (_, i) => ({
+        // Mock Data Generation
+        const generateMockPRs = (count) => Array.from({ length: count }, (_, i) => ({
             id: i + 1,
-            title: `PR #${i + 1}: Feature Update`,
-            author: `user${i % 5 + 1}`,
-            status: ['open', 'review', 'merged'][i % 3],
-            comments: []
+            title: `PR #${i + 1}: ${['Feature', 'Bugfix', 'Refactor', 'Docs'][i % 4]} Update`,
+            author: `user${(i % 10) + 1}`,
+            status: ['open', 'review', 'merged', 'draft'][i % 4],
+            createdAt: new Date(2025, 2, Math.floor(Math.random() * 28) + 1).toISOString(),
+            description: `This PR addresses issue #${i}. Changes include updates to core functionality.`,
+            diff: [
+                { line: 1, type: 'context', content: ' function hello() {' },
+                { line: 2, type: 'removed', content: '-    console.log("Old code");' },
+                { line: 3, type: 'added', content: '+    console.log("New code");' },
+                { line: 4, type: 'context', content: ' }' }
+            ],
+            comments: [],
+            inlineComments: {},
+            reviewers: [`user${(i % 5) + 1}`, `user${(i % 5) + 2}`],
+            labels: ['enhancement', 'bug', 'docs'][i % 3],
+            milestone: `v${Math.floor(i / 10) + 1}.0`
         }));
 
-        // Virtualized List Component
-        const PRList = ({ prs, onSelect }) => {
-            const [visibleRange, setVisibleRange] = React.useState({ start: 0, end: 20 });
+        const mockUsers = Array.from({ length: 20 }, (_, i) => ({
+            id: `user${i + 1}`,
+            name: `User ${i + 1}`,
+            role: ['developer', 'reviewer', 'admin'][i % 3]
+        }));
+
+        // Utility Functions
+        const debounce = (fn, delay) => {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => fn(...args), delay);
+            };
+        };
+
+        // Custom Hook for Virtualization
+        const useVirtualList = (items, itemHeight = 50) => {
+            const [range, setRange] = React.useState({ start: 0, end: 20 });
             const listRef = React.useRef(null);
 
-            const handleScroll = () => {
+            const updateRange = () => {
                 if (!listRef.current) return;
                 const { scrollTop, clientHeight } = listRef.current;
-                const itemHeight = 50; // Approximate height of each PR item
-                const start = Math.floor(scrollTop / itemHeight);
-                const end = Math.min(start + Math.ceil(clientHeight / itemHeight) + 5, prs.length);
-                setVisibleRange({ start, end });
+                const start = Math.max(0, Math.floor(scrollTop / itemHeight));
+                const end = Math.min(start + Math.ceil(clientHeight / itemHeight) + 5, items.length);
+                setRange({ start, end });
             };
 
             React.useEffect(() => {
                 const list = listRef.current;
-                list.addEventListener('scroll', handleScroll);
-                return () => list.removeEventListener('scroll', handleScroll);
-            }, []);
+                if (list) {
+                    list.addEventListener('scroll', debounce(updateRange, 100));
+                    return () => list.removeEventListener('scroll', updateRange);
+                }
+            }, [items.length]);
 
-            const visiblePRs = prs.slice(visibleRange.start, visibleRange.end);
+            return { listRef, visibleItems: items.slice(range.start, range.end), range };
+        };
+
+        // Filter Component
+        const FilterBar = ({ onFilterChange }) => {
+            const [status, setStatus] = React.useState('');
+            const [author, setAuthor] = React.useState('');
+            const [search, setSearch] = React.useState('');
+
+            const handleFilter = () => onFilterChange({ status, author, search });
+
+            return (
+                <div className="filter-bar">
+                    <select value={status} onChange={(e) => { setStatus(e.target.value); handleFilter(); }}>
+                        <option value="">All Statuses</option>
+                        <option value="open">Open</option>
+                        <option value="review">Review</option>
+                        <option value="merged">Merged</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                    <select value={author} onChange={(e) => { setAuthor(e.target.value); handleFilter(); }}>
+                        <option value="">All Authors</option>
+                        {mockUsers.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                    </select>
+                    <input
+                        type="text"
+                        placeholder="Search PRs..."
+                        value={search}
+                        onChange={(e) => { setSearch(e.target.value); handleFilter(); }}
+                    />
+                </div>
+            );
+        };
+
+        // PR Item Component
+        const PRItem = React.memo(({ pr, onSelect, isSelected }) => (
+            <div
+                className={`pr-item ${isSelected ? 'selected' : ''}`}
+                onClick={() => onSelect(pr)}
+                style={isSelected ? { background: '#e6f3ff' } : {}}
+            >
+                <span>{pr.title}</span>
+                <span className={`status-badge status-${pr.status}`}>
+                    {pr.status}
+                </span>
+            </div>
+        ));
+
+        // PR List Component
+        const PRList = ({ prs, selectedPR, onSelect }) => {
+            const { listRef, visibleItems } = useVirtualList(prs);
 
             return (
                 <div ref={listRef} className="pr-list">
-                    {visiblePRs.map(pr => (
-                        <div
+                    {visibleItems.map(pr => (
+                        <PRItem
                             key={pr.id}
-                            className="pr-item"
-                            onClick={() => onSelect(pr)}
-                        >
-                            {pr.title} - {pr.author} <span className="status">({pr.status})</span>
-                        </div>
+                            pr={pr}
+                            onSelect={onSelect}
+                            isSelected={selectedPR && selectedPR.id === pr.id}
+                        />
                     ))}
                 </div>
             );
         };
 
-        // PR Details Component
-        const PRDetails = ({ pr, onAddComment }) => {
-            const [comment, setComment] = React.useState('');
+        // Diff Line Component
+        const DiffLine = React.memo(({ line, onAddInlineComment }) => (
+            <div
+                className={`diff-line ${line.type === 'added' ? 'diff-added' : line.type === 'removed' ? 'diff-removed' : ''}`}
+                onClick={() => onAddInlineComment && onAddInlineComment(line.line)}
+            >
+                {line.content}
+            </div>
+        ));
 
-            const handleSubmit = (e) => {
+        // Diff View Component
+        const DiffView = ({ diff, inlineComments, onAddInlineComment }) => (
+            <div className="diff-view">
+                {diff.map((line, i) => (
+                    <div key={i}>
+                        <DiffLine line={line} onAddInlineComment={onAddInlineComment} />
+                        {inlineComments[line.line] && inlineComments[line.line].map((c, idx) => (
+                            <div key={idx} className="inline-comment">{c}</div>
+                        ))}
+                    </div>
+                ))}
+            </div>
+        );
+
+        // Comment Component
+        const Comment = React.memo(({ comment, isInline }) => (
+            <div className={`comment ${isInline ? 'inline-comment' : ''}`}>
+                {comment}
+            </div>
+        ));
+
+        // PR Details Component
+        const PRDetails = ({ pr, onAddComment, onAddInlineComment, onChangeStatus }) => {
+            const [comment, setComment] = React.useState('');
+            const [inlineComment, setInlineComment] = React.useState('');
+            const [inlineLine, setInlineLine] = React.useState(null);
+
+            const handleCommentSubmit = (e) => {
                 e.preventDefault();
                 if (comment.trim()) {
                     onAddComment(pr.id, comment);
@@ -129,53 +302,136 @@
                 }
             };
 
+            const handleInlineCommentSubmit = (e) => {
+                e.preventDefault();
+                if (inlineComment.trim() && inlineLine !== null) {
+                    onAddInlineComment(pr.id, inlineLine, inlineComment);
+                    setInlineComment('');
+                    setInlineLine(null);
+                }
+            };
+
+            const handleAddInlineComment = (line) => setInlineLine(line);
+
             if (!pr) return <div className="pr-details">Select a PR to view details</div>;
 
             return (
                 <div className="pr-details">
                     <h2>{pr.title}</h2>
-                    <p>Author: {pr.author} | Status: {pr.status}</p>
-                    <div className="comment-box">
-                        <h3>Comments</h3>
-                        {pr.comments.map((c, i) => (
-                            <p key={i}>{c}</p>
-                        ))}
-                        <form onSubmit={handleSubmit}>
+                    <p>Author: {pr.author} | Created: {new Date(pr.createdAt).toLocaleDateString()}</p>
+                    <p>Status: {pr.status} | Milestone: {pr.milestone} | Labels: {pr.labels}</p>
+                    <p>Reviewers: {pr.reviewers.join(', ')}</p>
+                    <p>{pr.description}</p>
+                    <div>
+                        <button onClick={() => onChangeStatus(pr.id, 'open')}>Set Open</button>
+                        <button onClick={() => onChangeStatus(pr.id, 'review')}>Set Review</button>
+                        <button onClick={() => onChangeStatus(pr.id, 'merged')}>Set Merged</button>
+                        <button onClick={() => onChangeStatus(pr.id, 'draft')}>Set Draft</button>
+                    </div>
+                    <h3>Diff</h3>
+                    <DiffView
+                        diff={pr.diff}
+                        inlineComments={pr.inlineComments}
+                        onAddInlineComment={handleAddInlineComment}
+                    />
+                    {inlineLine !== null && (
+                        <form onSubmit={handleInlineCommentSubmit}>
                             <textarea
-                                value={comment}
-                                onChange={(e) => setComment(e.target.value)}
-                                placeholder="Add a comment..."
+                                value={inlineComment}
+                                onChange={(e) => setInlineComment(e.target.value)}
+                                placeholder={`Comment on line ${inlineLine}...`}
                             />
-                            <button type="submit">Add Comment</button>
+                            <button type="submit">Add Inline Comment</button>
+                            <button type="button" onClick={() => setInlineLine(null)}>Cancel</button>
                         </form>
+                    )}
+                    <h3>Comments</h3>
+                    {pr.comments.map((c, i) => <Comment key={i} comment={c} />)}
+                    <form onSubmit={handleCommentSubmit}>
+                        <textarea
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            placeholder="Add a comment..."
+                        />
+                        <button type="submit">Add Comment</button>
+                    </form>
+                </div>
+            );
+        };
+
+        // User List Component
+        const UserList = ({ users }) => (
+            <div className="user-list">
+                <h3>Users</h3>
+                {users.map(user => (
+                    <div key={user.id} className="user-item">
+                        {user.name} ({user.role})
+                    </div>
+                ))}
+            </div>
+        );
+
+        // Main App Component
+        const App = () => {
+            const [prs, setPRs] = React.useState(generateMockPRs(500));
+            const [selectedPR, setSelectedPR] = React.useState(null);
+            const [filters, setFilters] = React.useState({ status: '', author: '', search: '' });
+
+            const filteredPRs = React.useMemo(() => {
+                return prs.filter(pr => {
+                    const matchesStatus = !filters.status || pr.status === filters.status;
+                    const matchesAuthor = !filters.author || pr.author === filters.author;
+                    const matchesSearch = !filters.search || 
+                        pr.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+                        pr.description.toLowerCase().includes(filters.search.toLowerCase());
+                    return matchesStatus && matchesAuthor && matchesSearch;
+                });
+            }, [prs, filters]);
+
+            const addComment = (prId, comment) => {
+                setPRs(prev => prev.map(pr => 
+                    pr.id === prId ? { ...pr, comments: [...pr.comments, comment] } : pr
+                ));
+            };
+
+            const addInlineComment = (prId, line, comment) => {
+                setPRs(prev => prev.map(pr => {
+                    if (pr.id !== prId) return pr;
+                    const newInlineComments = { ...pr.inlineComments };
+                    newInlineComments[line] = [...(newInlineComments[line] || []), comment];
+                    return { ...pr, inlineComments: newInlineComments };
+                }));
+            };
+
+            const changeStatus = (prId, status) => {
+                setPRs(prev => prev.map(pr => 
+                    pr.id === prId ? { ...pr, status } : pr
+                ));
+            };
+
+            const handleFilterChange = (newFilters) => setFilters(newFilters);
+
+            return (
+                <div className="container">
+                    <div className="sidebar">
+                        <FilterBar onFilterChange={handleFilterChange} />
+                        <PRList prs={filteredPRs} selectedPR={selectedPR} onSelect={setSelectedPR} />
+                        <UserList users={mockUsers} />
+                    </div>
+                    <div className="main-content">
+                        <h1>Git PR Powerhouse</h1>
+                        <PRDetails
+                            pr={selectedPR}
+                            onAddComment={addComment}
+                            onAddInlineComment={addInlineComment}
+                            onChangeStatus={changeStatus}
+                        />
                     </div>
                 </div>
             );
         };
 
-        // Main App Component
-        const App = () => {
-            const [prs, setPRs] = React.useState(mockPRs);
-            const [selectedPR, setSelectedPR] = React.useState(null);
-
-            const addComment = (prId, comment) => {
-                setPRs(prevPRs =>
-                    prevPRs.map(pr =>
-                        pr.id === prId ? { ...pr, comments: [...pr.comments, comment] } : pr
-                    )
-                );
-            };
-
-            return (
-                <div className="container">
-                    <h1>Git PR Review</h1>
-                    <PRList prs={prs} onSelect={setSelectedPR} />
-                    <PRDetails pr={selectedPR} onAddComment={addComment} />
-                </div>
-            );
-        };
-
-        // Render the app
+        // Render the App
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
 </body>
